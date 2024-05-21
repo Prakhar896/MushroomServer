@@ -16,6 +16,7 @@ class EventUpdate:
         self.player = player
         self.event = event
         self.value = value
+        self.acknowledged = False
         self.timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 class Game:
@@ -27,6 +28,7 @@ class Game:
         self.winner = None
         self.currentTurn = "Player1"
         self.eventUpdates = []
+        self.created = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def generateGameCode():
     code = ""
@@ -36,3 +38,11 @@ def generateGameCode():
 
 def errorObject(message):
     return {"error": message}
+
+def dictRepr(obj):
+    value = obj.__dict__
+    for key in value:
+        if isinstance(value[key], EventUpdate) or isinstance(value[key], Player) or isinstance(value[key], Game):
+            value[key] = dictRepr(value[key])
+    
+    return value

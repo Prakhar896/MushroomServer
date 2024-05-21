@@ -13,8 +13,10 @@ db = {}
 def checkHeaders():
     if "Content-Type" not in request.headers or request.headers["Content-Type"] != "application/json":
         return errorObject("Content-Type header must be present and application/json.")
-    if "APIKey" not in request.headers or request.headers["APIKey"] != "123456":
+    if "APIKey" not in request.headers or request.headers["APIKey"] != os.environ["APIKey"]:
         return errorObject("APIKey header must be present and correct.")
+
+    return True
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -43,6 +45,7 @@ def requestGameCode():
     )
     game = Game(code, player1, request.json["progressGoal"])
     db[code] = game
+    print(dictRepr(game))
     return jsonify({"code": code, "message": "Game created successfully. Player 1 game parameters used. Waiting for Player 2 client. Wait time is 120 seconds."})
 
 if __name__ == '__main__':
