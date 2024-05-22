@@ -11,6 +11,13 @@ class Player:
         self.progress = progress
         self.skipNextTurn = skipNextTurn
 
+# Event Types:
+## - PlayerJoined
+## - RollingDice
+## - DiceRolled
+## - PowerupActivated
+## - GameOverAck
+
 class EventUpdate:
     def __init__(self, player, event, value) -> None:
         self.player = player
@@ -29,6 +36,7 @@ class Game:
         self.currentTurn = "Player1"
         self.eventUpdates = []
         self.created = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.finished = None
 
 def generateGameCode(notIn=[]):
     code = ""
