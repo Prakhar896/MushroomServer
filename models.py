@@ -1,4 +1,4 @@
-import os, sys, datetime, random
+import os, sys, datetime, random, copy
 
 class Player:
     def __init__(self, characterName, hp, exp, skill, emoji, repName, progress, skipNextTurn) -> None:
@@ -30,16 +30,23 @@ class Game:
         self.eventUpdates = []
         self.created = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-def generateGameCode():
+def generateGameCode(notIn=[]):
     code = ""
-    for i in range(6):
-        code += str(random.randint(0, 9))
+    if len(notIn) == 0:
+        for _ in range(6):
+            code += str(random.randint(0, 9))
+    else:
+        while code in notIn:
+            code = ""
+            for _ in range(6):
+                code += str(random.randint(0, 9))
     return code
 
 def errorObject(message):
     return {"error": message}
 
 def dictRepr(obj):
+    obj = copy.deepcopy(obj)
     value = obj.__dict__
     for key in value:
         if isinstance(value[key], EventUpdate) or isinstance(value[key], Player) or isinstance(value[key], Game):
