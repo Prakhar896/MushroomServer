@@ -21,7 +21,7 @@ class Player:
 class EventUpdate:
     def __init__(self, player, event, value) -> None:
         self.player = player
-        self.event = event
+        self.eventType = event
         self.value = value
         self.acknowledged = False
         self.timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -44,7 +44,7 @@ def generateGameCode(notIn=[]):
         for _ in range(6):
             code += str(random.randint(0, 9))
     else:
-        while code in notIn:
+        while code in notIn or len(code) != 6:
             code = ""
             for _ in range(6):
                 code += str(random.randint(0, 9))
@@ -57,6 +57,10 @@ def dictRepr(obj):
     obj = copy.deepcopy(obj)
     value = obj.__dict__
     for key in value:
+        if isinstance(value[key], list):
+            for i in range(len(value[key])):
+                if isinstance(value[key][i], EventUpdate) or isinstance(value[key][i], Player) or isinstance(value[key][i], Game):
+                    value[key][i] = dictRepr(value[key][i])
         if isinstance(value[key], EventUpdate) or isinstance(value[key], Player) or isinstance(value[key], Game):
             value[key] = dictRepr(value[key])
     

@@ -11,9 +11,10 @@ CORS(app)
 db: dict[str, Game] = {}
 
 def checkHeaders():
-    if "Content-Type" not in request.headers or request.headers["Content-Type"] != "application/json":
+    print(request.json)
+    if "Content-Type" not in request.headers or not request.headers["Content-Type"].startswith("application/json"):
         return errorObject("Content-Type header must be present and application/json.")
-    if "APIKey" not in request.headers or request.headers["APIKey"] != os.environ["APIKey"]:
+    if "APIKey" not in request.headers or request.headers["Apikey"] != os.environ["APIKey"]:
         return errorObject("APIKey header must be present and correct.")
 
     return True
@@ -21,6 +22,17 @@ def checkHeaders():
 @app.route('/', methods=['GET', 'POST'])
 def index():
     return render_template("index.html")
+
+@app.route('/data', methods=['GET'])
+def data():
+    dbGameDataInJSON = {}
+    for key in db:
+        dbGameDataInJSON[key] = dictRepr(db[key])
+    return dbGameDataInJSON
+
+@app.route("/health", methods=['GET'])
+def health():
+    return jsonify({"status": "Healthy"})
 
 @app.route('/requestGameCode', methods=['POST'])
 def requestGameCode():
@@ -122,6 +134,11 @@ def sendEventUpdate():
 
     # Add event update to the game object, if not GameOverAck event
     if event != "GameOverAck":
+        if request.json["playerID"] == "P1" and db[code].currentTurn != "Player1":
+            return errorObject("Not Player 1's turn.")
+        if request.json["playerID"] == "P2" and db[code].currentTurn != "Player2":
+            return errorObject("Not Player 2's turn.")
+        
         db[code].eventUpdates.append(EventUpdate(
             "Player1" if request.json["playerID"] == "P1" else "Player2",
             request.json["event"],
@@ -235,6 +252,35 @@ def sendEventUpdate():
                 return errorObject("Game already over. Winner: {}".format(db[code].winner))
             
     return jsonify({"message": "Event update received successfully."})
+
+@app.route('/getGameStatus', methods=['POST'])
+def getGameStatus():
+    headersCheck = checkHeaders()
+    if not isinstance(headersCheck, bool):
+        return headersCheck
+    
+    if "code" not in request.json:
+        return errorObject("Missing parameter: code")
+    if "playerID" not in request.json:
+        return errorObject("Missing parameter: playerID")
+    if request.json["playerID"] not in ["P1", "P2"]:
+        return errorObject("Invalid player ID.")
+    
+    if request.json["code"] not in db:
+        return errorObject("Game not found.")
+    
+    game = db[request.json["code"]]
+    initialRepr = dictRepr(game)
+
+    ## Mark events as seen
+    for eventIndex in range(len(db[request.json["code"]].eventUpdates)):
+        requesterID = "Player1" if request.json["playerID"] == "P1" else "Player2"
+        if db[request.json["code"]].eventUpdates[eventIndex].player != requesterID:
+            db[request.json["code"]].eventUpdates[eventIndex].acknowledged = True
+
+    print(initialRepr)
+
+    return initialRepr
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8500, debug=True)
