@@ -122,7 +122,7 @@ def sendEventUpdate():
         return errorObject("Game not found.")
     if request.json["playerID"] not in ["P1", "P2"]:
         return errorObject("Invalid player ID.")
-    if request.json["event"] not in ["RollingDice", "DiceRolled", "PowerupActivated", "TurnOver", "GameOverAck"]:
+    if request.json["event"] not in ["Ready", "RollingDice", "DiceRolled", "PowerupActivated", "TurnOver", "GameOverAck"]:
         return errorObject("Invalid event type.")
     if (not isinstance(request.json["progress"], int)) or int(request.json["progress"]) < 0:
         return errorObject("Invalid progress amount.")
@@ -133,7 +133,13 @@ def sendEventUpdate():
     event = request.json["event"]
 
     # Add event update to the game object, if not GameOverAck event
-    if event != "GameOverAck":
+    if event == "Ready":
+        db[code].eventUpdates.append(EventUpdate(
+            "Player1" if request.json["playerID"] == "P1" else "Player2",
+            request.json["event"],
+            request.json["value"]
+        ))
+    elif event != "GameOverAck":
         if request.json["playerID"] == "P1" and db[code].currentTurn != "Player1":
             return errorObject("Not Player 1's turn.")
         if request.json["playerID"] == "P2" and db[code].currentTurn != "Player2":
@@ -148,7 +154,7 @@ def sendEventUpdate():
     # Run powerup use logic if any
     if event == "PowerupActivated":
         if "skipNextTurn" in request.json and request.json["skipNextTurn"] == True:
-            if request.json["playerID"] == "P1":
+            if request.json["playerID"] == "P1": 
                 db[code].player1.skipNextTurn = True
             else:
                 db[code].player2.skipNextTurn = True

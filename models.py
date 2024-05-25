@@ -48,7 +48,7 @@ def generateGameCode(notIn=[]):
             code = ""
             for _ in range(6):
                 code += str(random.randint(0, 9))
-    return code
+    return "111111"
 
 def errorObject(message):
     return {"error": message}
