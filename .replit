@@ -13,4 +13,4 @@ requiredFiles = [".replit", "replit.nix"]
 [deployment]
 run = ["sh", "-c", "python main.py"]
 deploymentTarget = "cloudrun"
-build = ["sh", "-c", "pip install -r requirements.txt"]
+build = ["sh", "-c", "pip install flask flask-cors python-dotenv requests"]
