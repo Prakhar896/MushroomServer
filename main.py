@@ -163,12 +163,25 @@ def sendEventUpdate():
     # Update player progress
     if request.json["playerID"] == "P1":
         db[code].player1.progress = request.json["progress"]
+        if "p2Progress" in request.json:
+            db[code].player2.progress = request.json["p2Progress"]
+        if "p1HP" in request.json:
+            db[code].player1.hp = request.json["p1HP"]
+        if "p2HP" in request.json:
+            db[code].player2.hp = request.json["p2HP"]
     else:
         db[code].player2.progress = request.json["progress"]
+        if "p2Progress" in request.json:
+            db[code].player1.progress = request.json["p2Progress"]
+        if "p1HP" in request.json:
+            db[code].player2.hp = request.json["p1HP"]
+        if "p2HP" in request.json:
+            db[code].player1.hp = request.json["p2HP"]
 
     # Turn over logic
     if event == "TurnOver":
         if db[code].currentTurn == "Player1":
+            nextTurn = "Player2"
             if db[code].player2.skipNextTurn:
                 db[code].player2.skipNextTurn = False
                 db[code].eventUpdates.append(EventUpdate(
@@ -176,9 +189,8 @@ def sendEventUpdate():
                     "TurnOver",
                     "Player 2 skipped this turn!"
                 ))
-            else:
-                db[code].currentTurn = "Player2"
-        else:
+                nextTurn = "Player1"
+            
             if db[code].player1.skipNextTurn:
                 db[code].player1.skipNextTurn = False
                 db[code].eventUpdates.append(EventUpdate(
@@ -186,8 +198,30 @@ def sendEventUpdate():
                     "TurnOver",
                     "Player 1 skipped this turn!"
                 ))
-            else:
-                db[code].currentTurn = "Player1"
+                nextTurn = "Player2"
+            
+            db[code].currentTurn = nextTurn
+        else:
+            nextTurn = "Player1"
+            if db[code].player1.skipNextTurn:
+                db[code].player1.skipNextTurn = False
+                db[code].eventUpdates.append(EventUpdate(
+                    "Player1",
+                    "TurnOver",
+                    "Player 1 skipped this turn!"
+                ))
+                nextTurn = "Player2"
+            
+            if db[code].player2.skipNextTurn:
+                db[code].player2.skipNextTurn = False
+                db[code].eventUpdates.append(EventUpdate(
+                    "Player2",
+                    "TurnOver",
+                    "Player 2 skipped this turn!"
+                ))
+                nextTurn = "Player1"
+            
+            db[code].currentTurn = nextTurn
     
     # Game over logic
     if event == "GameOverAck":
