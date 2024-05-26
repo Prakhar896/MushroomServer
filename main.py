@@ -1,4 +1,4 @@
-import os, sys, shutil, json, datetime, requests
+import os, sys, shutil, json, datetime, requests, copy
 from flask import Flask, request, render_template, url_for, jsonify
 from flask_cors import CORS
 from models import *
@@ -21,7 +21,7 @@ def checkHeaders():
 
 @app.before_request
 def deleteDeadGames():
-    for key in db:
+    for key in copy.deepcopy(db):
         if db[key].finished != None and (datetime.datetime.now() - datetime.datetime.strptime(db[key].finished, "%Y-%m-%d %H:%M:%S")).total_seconds() > 3600:
             del db[key]
         elif (datetime.datetime.now() - datetime.datetime.strptime(db[key].created, "%Y-%m-%d %H:%M:%S")).total_seconds() > 3600:
