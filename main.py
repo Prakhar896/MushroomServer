@@ -22,9 +22,9 @@ def checkHeaders():
 @app.before_request
 def deleteDeadGames():
     for key in db:
-        if db[key].finished != None and (datetime.datetime.now() - datetime.datetime.strptime(db[key].finished, "%Y-%m-%d %H:%M:%S")).min > 60:
+        if db[key].finished != None and (datetime.datetime.now() - datetime.datetime.strptime(db[key].finished, "%Y-%m-%d %H:%M:%S")).total_seconds() > 3600:
             del db[key]
-        elif (datetime.datetime.now() - datetime.datetime.strptime(db[key].created, "%Y-%m-%d %H:%M:%S")).min > 60:
+        elif (datetime.datetime.now() - datetime.datetime.strptime(db[key].created, "%Y-%m-%d %H:%M:%S")).total_seconds() > 3600:
             del db[key]
 
 @app.route('/', methods=['GET', 'POST'])
