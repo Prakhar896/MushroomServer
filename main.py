@@ -11,7 +11,7 @@ CORS(app)
 db: dict[str, Game] = {}
 
 def checkHeaders():
-    print(request.json)
+    # print(request.json)
     if "Content-Type" not in request.headers or not request.headers["Content-Type"].startswith("application/json"):
         return errorObject("Content-Type header must be present and application/json.")
     if "APIKey" not in request.headers or request.headers["Apikey"] != os.environ["APIKey"]:
@@ -96,7 +96,6 @@ def joinGame():
         "PlayerJoined",
         "{} joined the game!".format(player2.repName)
     ))
-
     
     return jsonify({
         "message": "Game joined successfully. Use Player 1 game parameters as provided. First turn is Player 1. Use P2 to identify yourself in subsequent requests.",
@@ -113,7 +112,7 @@ def sendEventUpdate():
     if not isinstance(headersCheck, bool):
         return headersCheck
     
-    for param in ["code", "playerID", "event", "value", "progress"]:
+    for param in ["code", "playerID", "eventType", "value", "progress"]:
         if param not in request.json:
             return errorObject("Missing parameter: {}".format(param))
     
@@ -122,21 +121,21 @@ def sendEventUpdate():
         return errorObject("Game not found.")
     if request.json["playerID"] not in ["P1", "P2"]:
         return errorObject("Invalid player ID.")
-    if request.json["event"] not in ["Ready", "RollingDice", "DiceRolled", "PowerupActivated", "TurnOver", "GameOverAck"]:
+    if request.json["eventType"] not in ["Ready", "RollingDice", "DiceRolled", "PowerupActivated", "TurnOver", "GameOverAck"]:
         return errorObject("Invalid event type.")
     if (not isinstance(request.json["progress"], int)) or int(request.json["progress"]) < 0:
         return errorObject("Invalid progress amount.")
-    if (request.json["event"] == "GameOverAck") and (("won" not in request.json) or (not isinstance(request.json["won"], bool))):
+    if (request.json["eventType"] == "GameOverAck") and (("won" not in request.json) or (not isinstance(request.json["won"], bool))):
         return errorObject("GameOverAck event must have a valid 'won' parameter.")
     
     code = request.json["code"]
-    event = request.json["event"]
+    event = request.json["eventType"]
 
     # Add event update to the game object, if not GameOverAck event
     if event == "Ready":
         db[code].eventUpdates.append(EventUpdate(
             "Player1" if request.json["playerID"] == "P1" else "Player2",
-            request.json["event"],
+            event,
             request.json["value"]
         ))
     elif event != "GameOverAck":
@@ -147,7 +146,7 @@ def sendEventUpdate():
         
         db[code].eventUpdates.append(EventUpdate(
             "Player1" if request.json["playerID"] == "P1" else "Player2",
-            request.json["event"],
+            event,
             request.json["value"]
         ))
 
@@ -206,7 +205,7 @@ def sendEventUpdate():
             # Add GameOverAck to event updates
             db[code].eventUpdates.append(EventUpdate(
                 "Player1" if request.json["playerID"] == "P1" else "Player2",
-                request.json["event"],
+                event,
                 request.json["value"]
             ))
             return jsonify({"message": "Game over. {} left to acknowledge. Winner: {}".format("Player 2" if request.json["playerID"] == "P1" else "Player 1", db[code].winner)})
@@ -219,7 +218,7 @@ def sendEventUpdate():
                     # Event sender acknowledging defeat after the other party won
                     db[code].eventUpdates.append(EventUpdate(
                         "Player1" if request.json["playerID"] == "P1" else "Player2",
-                        request.json["event"],
+                        event,
                         request.json["value"]
                     ))
 
@@ -240,7 +239,7 @@ def sendEventUpdate():
                     # Event sender acknowledging defeat after the other party won
                     db[code].eventUpdates.append(EventUpdate(
                         "Player1" if request.json["playerID"] == "P1" else "Player2",
-                        request.json["event"],
+                        event,
                         request.json["value"]
                     ))
 
@@ -284,7 +283,7 @@ def getGameStatus():
         if db[request.json["code"]].eventUpdates[eventIndex].player != requesterID:
             db[request.json["code"]].eventUpdates[eventIndex].acknowledged = True
 
-    print(initialRepr)
+    # print(initialRepr)
 
     return initialRepr
 
