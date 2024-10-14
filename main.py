@@ -330,4 +330,9 @@ def getGameStatus():
     return initialRepr
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    port = None
+    if ("RuntimePort" not in os.environ) or (not os.environ["RuntimePort"].isdigit()):
+        print("MAIN: RuntimePort variable invalid or not set.")
+        sys.exit(1)
+    port = int(os.environ["RuntimePort"])
+    app.run(host='0.0.0.0', port=port)
