@@ -1,0 +1,13 @@
+{
+    "scripts": {
+        "run": [
+            "pm2 start ./virt/bin/python --name MushroomServer -- main.py"
+        ],
+        "stop": [
+            "pm2 stop MushroomServer"
+        ],
+        "logs": [
+            "pm2 logs MushroomServer --lines 100"
+        ]
+    }
+}
